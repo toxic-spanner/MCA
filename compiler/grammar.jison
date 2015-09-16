@@ -5,12 +5,6 @@
  */
 
 
-/** lexer statements **
- * what this does:  the lexer breaks the input text (the program) into chunks called "tokens" which we use in the parser.
- * how it does it:  on the left are regular expressions, on the right is Javascript that returns the token name.
- * notes:           the lexer searches for tokens from the top of the list down, so the more specific regexs should
- *                  go closer to the top.
- */
 %lex
 
 DecimalDigit                                                                [0-9]
@@ -59,6 +53,8 @@ StringLiteral                                                               (\"{
 "//".*(\r\n|\r|\n)                                                          /* fixme: dont skip comments, should be 'LINE_COMMENT' */
 
 {StringLiteral}                                                             yytext = yytext.substr(1, yyleng - 2); return 'STRING';
+
+\\{EscapeSequence}                                                          yytext = yytext.substr(2); return 'ESCAPE_SEQUENCE';
 
 "/"{Identifier}                                                             yytext = yytext.substr(1); return 'COMMAND_NAME';
 
@@ -139,19 +135,6 @@ StringLiteral                                                               (\"{
 
 /lex
 
-/** javascript setup **
- * what this does:  runs the javascript code before parsing begins, allowing you to define variables, etc
- * how it does it:  anything you define here will be available in the grammar actions
- * notes:           here we use it to setup the AST functions
- */
-%{
-// todo
-%}
-
-/** operator order **
- * what this does:  determines the order of operations (e.g. BOMDAS)
- * how it does it:  %left says that they are left-associative, and the order they appear is the inverse order of association
- */
 %left 'AND' 'OR'
 %left 'EQUAL' 'NOT_EQUAL' 'GTE' 'LTE'
 %left 'NOT'
@@ -164,10 +147,6 @@ StringLiteral                                                               (\"{
 // specify the name of the initial token
 %start Program
 
-/** grammar definition **
- * what this does:  this is the meat of the parser - here we specify how to actually parse the language
- * how it does it:  we define non-terminal tokens which are made up of other tokens in a list
- */
 %%
 
 Program
@@ -421,9 +400,70 @@ CommandArguments
   | CommandArguments CommandArgument                    -> $1.concat($2);
   ;
 
+CommandText
+  : NullLiteral
+  | NumberLiteral
+  | StringLiteral
+  | ESCAPE_SEQUENCE
+  | COMMAND_NAME
+  | INTERNAL_IDENTIFIER
+  | IF
+  | ELSE
+  | WHILE
+  | CONTINUE
+  | DO
+  | SWITCH
+  | CASE
+  | BREAK
+  | DEFAULT
+  | INFINITY
+  | NAN
+  | IDENTIFIER
+  | EQUAL
+  | NOT_EQUAL
+  | GTE
+  | LTE
+  | '!'
+  | INCREMENT
+  | DECREMENT
+  | ASSIGN_PLUS
+  | ASSIGN_MINUS
+  | ASSIGN_TIMES
+  | ASSIGN_DIVIDE
+  | ASSIGN_REMAINDER
+  | ASSIGN_URSHIFT
+  | ASSIGN_LSHIFT
+  | ASSIGN_RSHIFT
+  | ASSIGN_BAND
+  | ASSIGN_XOR
+  | ASSIGN_BOR
+  | '='
+  | AND
+  | OR
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '%'
+  | URSHIFT
+  | LSHIFT
+  | RSHIFT
+  | '&'
+  | '^'
+  | '|'
+  | '~'
+  | '['
+  | ']'
+  | '('
+  | ')'
+  | ':'
+  | ';'
+  | INVALID
+  ;
+
 CommandArgument
-  : INVALID
-  | '{' Expression '}'                                  -> $2;
+  : '{' Expression '}'                                  -> $2;
+  | CommandText
   ;
 
 %%
@@ -439,36 +479,44 @@ function parseNumericLiteral(literal) {
   } else return Number(literal);
 }
 
+parser.ast = {};
+
 /* AST Constructors */
+
 function Program(body, loc) {
   this.type = "Program";
   this.body = body;
   this.loc = loc;
 }
+parser.ast.Program = Program;
 
 function Identifier(name, loc) {
   this.type = "Identifier";
   this.name = name;
   this.loc = loc;
 }
+parser.ast.Identifier = Identifier;
 
 function LineComment(text, loc) {
   this.type = "LineComment";
   this.text = text;
   this.loc = loc;
 }
+parser.ast.LineComment = LineComment;
 
 function BlockComment(text, loc) {
   this.type = "BlockComment";
   this.text = text;
   this.loc = loc;
 }
+parser.ast.BlockComment = BlockComment;
 
 function BlockStatement(body, loc) {
   this.type = "BlockStatement";
   this.body = body;
   this.loc = loc;
 }
+parser.ast.BlockStatement = BlockStatement;
 
 function StaticMacroStatement(id, body, loc) {
   this.type = "StaticMacroStatement";
@@ -476,6 +524,7 @@ function StaticMacroStatement(id, body, loc) {
   this.body = body;
   this.loc = loc;
 }
+parser.ast.StaticMacroStatement = StaticMacroStatement;
 
 function MacroStatement(id, params, body, loc) {
   this.type = "MacroStatement";
@@ -484,17 +533,20 @@ function MacroStatement(id, params, body, loc) {
   this.body = body;
   this.loc = loc;
 }
+parser.ast.MacroStatement = MacroStatement;
 
 function EmptyStatement(loc) {
   this.type = "EmptyStatement";
   this.loc = loc;
 }
+parser.ast.EmptyStatement = EmptyStatement;
 
 function ExpressionStatement(expression, loc) {
   this.type = "ExpressionStatement";
   this.expression = expression;
   this.loc = loc;
 }
+parser.ast.ExpressionStatement = ExpressionStatement;
 
 function IfStatement(test, consequent, alternate, loc) {
   this.type = "IfStatement";
@@ -503,6 +555,7 @@ function IfStatement(test, consequent, alternate, loc) {
   this.alternate = alternate;
   this.loc = loc;
 }
+parser.ast.IfStatement = IfStatement;
 
 function DoWhileStatement(body, test, loc) {
   this.type = "DoWhileStatement";
@@ -510,6 +563,7 @@ function DoWhileStatement(body, test, loc) {
   this.test = test;
   this.loc = loc;
 }
+parser.ast.DoWhileStatement = DoWhileStatement;
 
 function WhileStatement(test, body, loc) {
   this.type = "WhileStatement";
@@ -517,22 +571,26 @@ function WhileStatement(test, body, loc) {
   this.body = body;
   this.loc = loc;
 }
+parser.ast.WhileStatement = WhileStatement;
 
 function ContinueStatement(loc) {
   this.type = "ContinueStatement";
   this.loc = loc;
 }
+parser.ast.ContinueStatement = ContinueStatement;
 
 function BreakStatement(loc) {
   this.type = "BreakStatement";
   this.loc = loc;
 }
+parser.ast.BreakStatement = BreakStatement;
 
 function ReturnStatement(argument, loc) {
   this.type = "ReturnStatement";
   this.argument = argument;
   this.loc = loc;
 }
+parser.ast.ReturnStatement = ReturnStatement;
 
 function SwitchStatement(discriminant, cases, loc) {
   this.type = "SwitchStatement";
@@ -540,6 +598,7 @@ function SwitchStatement(discriminant, cases, loc) {
   this.cases = cases;
   this.loc = loc;
 }
+parser.ast.SwitchStatement = SwitchStatement;
 
 function SwitchCase(test, consequent, loc) {
   this.type = "SwitchCase";
@@ -547,12 +606,14 @@ function SwitchCase(test, consequent, loc) {
   this.consequent = consequent;
   this.loc = loc;
 }
+parser.ast.SwitchCase = SwitchCase;
 
 function MapExpression(elements, loc) {
   this.type = "MapExpression";
   this.elements = elements;
   this.loc = loc;
 }
+parser.ast.MapExpression = MapExpression;
 
 function LogicalExpression(operator, left, right, loc) {
   this.type = "LogicalExpression";
@@ -561,6 +622,7 @@ function LogicalExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.LogicalExpression = LogicalExpression;
 
 function BinaryExpression(operator, left, right, loc) {
   this.type = "BinaryExpression";
@@ -569,6 +631,7 @@ function BinaryExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.BinaryExpression = BinaryExpression;
 
 function ComparisonExpression(operator, left, right, loc) {
   this.type = "ComparisonExpression";
@@ -577,6 +640,7 @@ function ComparisonExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.ComparisonExpression = ComparisonExpression;
 
 function ShiftExpression(operator, left, right, loc) {
   this.type = "ShiftExpression";
@@ -585,6 +649,7 @@ function ShiftExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.ShiftExpression = ShiftExpression;
 
 function MathExpression(operator, left, right, loc) {
   this.type = "MathExpression";
@@ -593,6 +658,7 @@ function MathExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.MathExpression = MathExpression;
 
 function UnaryExpression(center, prefix, postfix, loc) {
   this.type = "UnaryExpression";
@@ -601,6 +667,7 @@ function UnaryExpression(center, prefix, postfix, loc) {
   this.postfix = postfix;
   this.loc = loc;
 }
+parser.ast.UnaryExpression = UnaryExpression;
 
 function MemberExpression(map, property, loc) {
   this.type = "MemberExpression";
@@ -608,6 +675,7 @@ function MemberExpression(map, property, loc) {
   this.property = property;
   this.loc = loc;
 }
+parser.ast.MemberExpression = MemberExpression;
 
 function CallExpression(macro, params, loc) {
   this.type = "CallExpression";
@@ -615,6 +683,7 @@ function CallExpression(macro, params, loc) {
   this.params = params;
   this.loc = loc;
 }
+parser.ast.CallExpression = CallExpression;
 
 function KeyValueExpression(key, value, loc) {
   this.type = "KeyValueExpression";
@@ -622,6 +691,7 @@ function KeyValueExpression(key, value, loc) {
   this.value = value;
   this.loc = loc;
 }
+parser.ast.KeyValueExpression = KeyValueExpression;
 
 function InternalCallExpression(name, params, loc) {
   this.type = "InternalCallExpression";
@@ -629,6 +699,7 @@ function InternalCallExpression(name, params, loc) {
   this.params = params;
   this.loc = loc;
 }
+parser.ast.InternalCallExpression = InternalCallExpression;
 
 function AssignmentExpression(operator, left, right, loc) {
   this.type = "AssignmentExpression";
@@ -637,23 +708,27 @@ function AssignmentExpression(operator, left, right, loc) {
   this.right = right;
   this.loc = loc;
 }
+parser.ast.AssignmentExpression = AssignmentExpression;
 
 function NullLiteral(loc) {
   this.type = "NullLiteral";
   this.loc = loc;
 }
+parser.ast.NullLiteral = NullLiteral;
 
 function NumberLiteral(value, loc) {
   this.type = "NumberLiteral";
   this.value = value;
   this.loc = loc;
 }
+parser.ast.NumberLiteral = NumberLiteral;
 
 function StringLiteral(value, loc) {
   this.type = "StringLiteral";
   this.value = value;
   this.loc = loc;
 }
+parser.ast.StringLiteral = StringLiteral;
 
 function CommandLiteral(name, params, loc) {
   this.type = "CommandLiteral";
@@ -661,14 +736,17 @@ function CommandLiteral(name, params, loc) {
   this.params = params;
   this.loc = loc;
 }
+parser.ast.CommandLiteral = CommandLiteral;
 
 function SourceLocation(source, start, end) {
   this.source = source;
   this.start = start;
   this.end = end;
 }
+parser.ast.SourceLocation = SourceLocation;
 
 function Position(line, column) {
   this.line = line;
   this.column = column;
 }
+parser.ast.Position = Position;
