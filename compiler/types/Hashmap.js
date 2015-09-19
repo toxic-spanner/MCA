@@ -24,13 +24,19 @@ Hashmap.prototype.values = function() {
     return values;
 };
 
-Hashmap.prototype.toObject = function() {
+Hashmap.prototype.toObject = function(call) {
+    call = call || function(item) { return item; };
+
     var result = {};
     this.stringKeyNames.forEach(function(key) {
-        result[key] = this.stringKeys[key];
+        var item = call(this.stringKeys[key]);
+        if (item.isMap) item = item.toObject(call);
+        result[key] = item;
     }.bind(this));
     this.numberKeyNames.forEach(function(key) {
-        result[key] = this.numberKeys[key];
+        var item = call(this.numberKeys[key]);
+        if (item.isMap) item = item.toObject(call);
+        result[key] = item;
     }.bind(this));
     return result;
 };
@@ -183,7 +189,9 @@ Hashmap.toJSON = function(map, toJSON) {
         });
         return result;
     }
-    return map.toObject();
+    return map.toObject(function(item) {
+        return toJSON(item);
+    });
 };
 Hashmap.cast = {
     string: function(map) {

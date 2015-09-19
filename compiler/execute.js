@@ -85,9 +85,14 @@ execute.create = function(statements, ctx) {
         if (latestType === item.type) {
             term.up(1);
             term.right(indent + latestType.length + locSection.length + paramLength);
-            term.green(" />\n");
+            term.yellow(" (" + item.loc.end.line + "," + item.loc.end.column + ")");
+            term.green("/>\n");
         }
-        else term.green((new Array(indent)).join(" ") + "</" + item.type + ">\n");
+        else {
+            term.green((new Array(indent)).join(" ") + "</" + item.type);
+            term.yellow("(" + item.loc.end.line + "," + item.loc.end.column + ")");
+            term.green(">\n");
+        }
 
         //console.log("Variables:", ctx.scopes);
 
