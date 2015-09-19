@@ -26,7 +26,10 @@ module.exports = function getAssignable(expression, ctx) {
         if (!variable || !variable.isMap) errors.typeError("Cannot use index of a non-map");
     } else {
         variableScopeName = ctx.findVariableScope(variableName);
-        if (variableScopeName === false) variableScopeName = 0;
+        if (variableScopeName === false) {
+            variableScopeName = 0;
+            ctx.setVariable(variableName, null, 0);
+        }
         scope = ctx.scopes[variableScopeName];
     }
 
