@@ -4,7 +4,7 @@ var getAssignable = require('../getAssignable');
 exports.type = "UnaryExpression";
 exports.call = function(node, ctx, execute) {
     if (node.prefix === '++' || node.prefix === '--' || node.postfix === '++' || node.postfix === '--') {
-        var assignable = getAssignable(node.center);
+        var assignable = getAssignable(node.center, ctx);
         var castValue = ctx.castNumber(assignable.getValue());
 
         if (node.prefix) {
