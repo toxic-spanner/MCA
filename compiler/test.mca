@@ -1,5 +1,0 @@
-#TEST(a, b) {
-    .log(a);
-    .log(b);
-}
-TEST("one", "two");
