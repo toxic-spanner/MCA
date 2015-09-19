@@ -37,8 +37,12 @@ if (process.argv.length < 3) {
                 term.brightRed("</warn>\n");
                 break;
             case "node":
-                var startLocation = pad(pad(data.node.loc.start.line, 2, "0", true), 3, " ", true) + ":" + pad(pad(data.node.loc.start.column, 2, "0", true), 3, " ");
-                var endLocation = pad(pad(data.node.loc.end.line, 2, "0", true), 3, " ", true) + ":" + pad(pad(data.node.loc.end.column, 2, "0", true), 3, " ");
+                var startLocation = "", endLocation = "";
+
+                if (data.node.loc) {
+                    startLocation = pad(pad(data.node.loc.start.line, 2, "0", true), 3, " ", true) + ":" + pad(pad(data.node.loc.start.column, 2, "0", true), 3, " ");
+                    endLocation = pad(pad(data.node.loc.end.line, 2, "0", true), 3, " ", true) + ":" + pad(pad(data.node.loc.end.column, 2, "0", true), 3, " ");
+                }
 
                 isEven = !isEven;
                 if (isEven) term.brightBlack(startLocation);

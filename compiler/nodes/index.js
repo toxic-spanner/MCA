@@ -21,10 +21,12 @@ module.exports = require('../getResource')([
     require('./MapExpression'),
     require('./MathExpression'),
     require('./MemberExpression'),
+    require('./OutExpression'),
     require('./ShiftExpression'),
     require('./UnaryExpression'),
 
     require('./Identifier'),
+    require('./OutIdentifier'),
     require('./Program'),
     require('./CommandLiteral'),
     require('./NullLiteral'),

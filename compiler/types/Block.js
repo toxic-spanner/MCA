@@ -1,4 +1,5 @@
 var execute = require('../execute');
+var errors = require('../errors');
 
 function Block(overloads) {
     this.isBlock = true;
@@ -19,6 +20,12 @@ Block.prototype.getOverload = function(name) {
             ctx.pushScope();
             for (var i = 0; i < params.length; i++) {
                 var paramDef = overload.params[i];
+
+                var param = params[i];
+                if (param && (param.isAssignable || paramDef.type === "OutIdentifier") && param.isAssignable !== (paramDef.type === "OutIdentifier")) {
+                    errors.callError("Both macro definition and call must specify 'out'");
+                }
+
                 ctx.setVariable(paramDef.name, params[i], 0);
             }
 

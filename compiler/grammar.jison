@@ -62,6 +62,7 @@ StringLiteral                                                               (\"{
 
 "."{Identifier}                                                             yytext = yytext.substr(1); return 'INTERNAL_IDENTIFIER';
 
+"out"                                                                       return 'OUT';
 "if"                                                                        return 'IF';
 "else"                                                                      return 'ELSE';
 "while"                                                                     return 'WHILE';
@@ -205,8 +206,13 @@ MacroStatement
   ;
 
 FormalParameterList
-  : IDENTIFIER                                          -> [new Identifier($1, createSourceLocation(null, @1, @1))];
-  | FormalParameterList "," IDENTIFIER                  -> $1.concat(new Identifier($3, createSourceLocation(null, @3, @3)));
+  : FormalParameterItem                                 -> [$1];
+  | FormalParameterList "," FormalParameterItem         -> $1.concat($3);
+  ;
+
+FormalParameterItem
+  : IDENTIFIER                                          -> new Identifier($1, createSourceLocation(null, @1, @1));
+  | OUT IDENTIFIER                                      -> new OutIdentifier($2, createSourceLocation(null, @1, @2));
   ;
 
 EmptyStatement
@@ -349,8 +355,13 @@ Expression
   ;
 
 ParameterList
-  : Expression                                          -> [$1]
-  | ParameterList ',' Expression                        -> $1.concat($3)
+  : ParameterItem                                       -> [$1]
+  | ParameterList ',' ParameterItem                     -> $1.concat($3)
+  ;
+
+ParameterItem
+  : Expression                                          -> $1
+  | OUT Expression                                      -> new OutExpression($2)
   ;
 
 AssignmentExpression
@@ -526,6 +537,13 @@ function Identifier(name, loc) {
 }
 parser.ast.Identifier = Identifier;
 
+function OutIdentifier(name, loc) {
+  this.type = "OutIdentifier";
+  this.name = name;
+  this.loc = loc;
+}
+parser.ast.OutIdentifier = OutIdentifier;
+
 function LineComment(text, loc) {
   this.type = "LineComment";
   this.text = text;
@@ -636,6 +654,12 @@ function SwitchCase(test, consequent, loc) {
   this.loc = loc;
 }
 parser.ast.SwitchCase = SwitchCase;
+
+function OutExpression(expression, loc) {
+  this.type = "OutExpression";
+  this.expression = expression;
+  this.loc = loc;
+}
 
 function MapExpression(elements, loc) {
   this.type = "MapExpression";

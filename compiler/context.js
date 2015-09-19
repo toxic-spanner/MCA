@@ -91,17 +91,30 @@ Context.prototype.findVariableScope = function(name) {
     return false;
 };
 
-Context.prototype.getVariable = function(name) {
-    var scope = this.findVariableScope(name);
+Context.prototype.getVariable = function(name, scope) {
+    if (scope == null) scope = this.findVariableScope(name);
     if (scope === false) errors.referenceError(name + " is not defined");
-    return this.scopes[scope][name];
+
+    return this.getVariableIn(name, this.scopes[scope]);
+};
+
+Context.prototype.getVariableIn = function(name, scope) {
+    var currentValue = scope[name];
+    if (currentValue && currentValue.isAssignable) return currentValue.getValue(value);
+    else return currentValue;
 };
 
 Context.prototype.setVariable = function(name, value, scope) {
     if (scope == null) scope = this.findVariableScope(name);
     if (scope === false) scope = 0;
 
-    this.scopes[scope][name] = value;
+    this.setVariableIn(name, value, this.scopes[scope]);
+};
+
+Context.prototype.setVariableIn = function(name, value, scope) {
+    var currentValue = scope[name];
+    if (currentValue && currentValue.isAssignable) currentValue.setValue(value);
+    else scope[name] = value;
 };
 
 Context.prototype.strictEqual = function(value1, value2) {

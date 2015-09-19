@@ -19,20 +19,26 @@ module.exports = function getAssignable(expression, ctx) {
         else errors.referenceError("Invalid assignable expression");
     }
 
+    var variableScopeName, scope;
     if (isMap) {
         variableIndex = execute(variableIndexExpression, ctx);
         if (variableName) variable = ctx.getVariable(variableName);
         if (!variable || !variable.isMap) errors.typeError("Cannot use index of a non-map");
+    } else {
+        variableScopeName = ctx.findVariableScope(variableName);
+        if (variableScopeName === false) variableScopeName = 0;
+        scope = ctx.scopes[variableScopeName];
     }
 
     return {
+        isAssignable: true,
         getValue: function() {
             if (isMap) return variable.getIndex(variableIndex);
-            return ctx.getVariable(variableName);
+            return ctx.getVariableIn(variableName, scope);
         },
         setValue: function(newValue) {
             if (isMap) variable.setIndex(variableIndex, newValue);
-            else ctx.setVariable(variableName, newValue);
+            else ctx.setVariableIn(variableName, newValue, scope);
         }
     };
 };
