@@ -1,5 +1,5 @@
 exports.type = "IfStatement";
 exports.call = function(node, ctx, execute) {
-    if (execute(node.test)) execute(node.consequent);
-    else if (node.alternate) execute(node.alternate);
+    if (ctx.castBoolean(execute(node.test))) execute(node.consequent.body);
+    else if (node.alternate) execute(node.alternate.body);
 };
