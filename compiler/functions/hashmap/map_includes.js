@@ -10,16 +10,16 @@ exports.call = function(map, search, index) {
         if (index < 0) index += mapLength;
 
         for (var i = index; i < mapLength; i++) {
-            if (map.getIndex(i).equals(search)) return true;
+            if (this.strictEqual(map.getIndex(i), search)) return true;
         }
     } else {
         var hasFound = false;
         map.for(function(index, item) {
-            if (item.equals(search)) {
+            if (this.strictEqual(item, search)) {
                 hasFound = true;
                 return false;
             }
-        });
+        }.bind(this));
         if (hasFound) return true;
     }
 

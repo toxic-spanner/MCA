@@ -1,0 +1,20 @@
+module.exports = [
+    require('./map_concat'),
+    require('./map_concatTo'),
+    require('./map_fill'),
+    require('./map_includes'),
+    require('./map_indexOf'),
+    require('./map_join'),
+    require('./map_keys'),
+    require('./map_lastIndexOf'),
+    require('./map_len'),
+    require('./map_pop'),
+    require('./map_push'),
+    require('./map_shift'),
+    require('./map_slice'),
+    require('./map_splice'),
+    require('./map_squash'),
+    require('./map_squashTo'),
+    require('./map_unshift'),
+    require('./map_values')
+];

@@ -9,7 +9,7 @@ exports.call = function(map, search, index) {
     if (index < 0) index += mapLength;
 
     for (var i = index; i < mapLength; i++) {
-        if (map.getIndex(i).equals(search)) return i;
+        if (this.strictEqual(map.getIndex(i), search)) return i;
     }
     return -1;
 };

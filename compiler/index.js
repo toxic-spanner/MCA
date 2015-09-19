@@ -1,4 +1,7 @@
 var grammar = require('./grammar');
+var execute = require('./execute');
+
+var Context = require('./Context');
 
 exports.grammar = grammar;
 exports.ast = grammar.parser.ast;
@@ -9,6 +12,13 @@ function parse(code) {
 exports.parse = parse;
 
 function compile(code) {
-    // todo
+    var ast = code;
+    if (!code || code.type !== "Program") ast = parse(code);
+
+    var context = new Context();
+    return {
+        result: execute(ast, context),
+        context: context
+    };
 }
 exports.compile = compile;

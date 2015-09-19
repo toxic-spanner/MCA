@@ -1,0 +1,22 @@
+module.exports = [
+    require('./str_charAt'),
+    require('./str_endsWith'),
+    require('./str_includes'),
+    require('./str_indexOf'),
+    require('./str_lastIndexOf'),
+    require('./str_len'),
+    require('./str_lowerCase'),
+    require('./str_match'),
+    require('./str_parseFloat'),
+    require('./str_parseInt'),
+    require('./str_repeat'),
+    require('./str_replaceWith'),
+    require('./str_slice'),
+    require('./str_split'),
+    require('./str_startsWith'),
+    require('./str_substring'),
+    require('./str_trim'),
+    require('./str_trimLeft'),
+    require('./str_trimRight'),
+    require('./str_upperCase')
+];

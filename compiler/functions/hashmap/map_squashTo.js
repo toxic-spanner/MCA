@@ -15,7 +15,7 @@ function squashTo(map1, map2, encounteredMaps) {
             var map1Item = map1.getIndex(index);
             if (map1Item.isMap) {
                 // todo: this might not be needed
-                if (encounteredMaps.indexOf(item)) errors.recursiveError("Recursive call to squashTo.");
+                if (encounteredMaps.indexOf(item)) errors.recursiveError("Recursive call to squashTo");
 
                 squashTo(map1Item, item, encounteredMaps);
                 newValue = map1Item;

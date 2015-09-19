@@ -42,10 +42,12 @@ SingleStringCharacter                                                       ([^\
 StringLiteral                                                               (\"{DoubleStringCharacter}*\")|(\'{SingleStringCharacter}*\')
 
 
-%options flex
 %options flex case-insensitive
 
+%s command
 %%
+
+<command>\s+                                                                return 'INVALID';
 
 \s+                                                                         /* skip whitespace */
 
@@ -56,7 +58,7 @@ StringLiteral                                                               (\"{
 
 \\{EscapeSequence}                                                          yytext = yytext.substr(2); return 'ESCAPE_SEQUENCE';
 
-"/"{Identifier}                                                             yytext = yytext.substr(1); return 'COMMAND_NAME';
+"/"{Identifier}                                                             yytext = yytext.substr(1); this.begin('command'); return 'COMMAND_NAME';
 
 "."{Identifier}                                                             yytext = yytext.substr(1); return 'INTERNAL_IDENTIFIER';
 
@@ -69,6 +71,7 @@ StringLiteral                                                               (\"{
 "case"                                                                      return 'CASE';
 "break"                                                                     return 'BREAK';
 "default"                                                                   return 'DEFAULT';
+"return"                                                                    return 'RETURN';
 
 "null"                                                                      return 'NULL';
 "infinity"                                                                  return 'INFINITY';
@@ -106,6 +109,8 @@ StringLiteral                                                               (\"{
 "&&"                                                                        return 'AND';
 "||"                                                                        return 'OR';
 
+"#"                                                                         return '#';
+
 "+"                                                                         return '+';
 "-"                                                                         return '-';
 "*"                                                                         return '*';
@@ -126,9 +131,9 @@ StringLiteral                                                               (\"{
 "("                                                                         return '(';
 ")"                                                                         return ')';
 
-","                                                                         return ',';
+","                                                                         this.begin('INITIAL'); return ',';
 ":"                                                                         return ':';
-";"                                                                         return ';';
+";"                                                                         this.begin('INITIAL'); return ';';
 
 <<EOF>>                                                                     return 'EOF';
 .                                                                           return 'INVALID';
@@ -144,22 +149,27 @@ StringLiteral                                                               (\"{
 %left 'URSHIFT' 'LSHIFT' 'RSHIFT' '&' '^' '|'
 %left '~'
 
+%{
+parser.__macroList = {};
+parser.ast = {};
+%}
+
 // specify the name of the initial token
 %start Program
 
 %%
 
 Program
-  : StatementList EOF                                   %{ return new Program($1, createSourceLocation(null, @1, @2)); %}
-  | EOF                                                 %{ return new Program([], createSourceLocation(null, @1, @1)); %}
+  : StatementList EOF                                   %{ return new Program($1, parser.__macroList, createSourceLocation(null, @1, @2)); %}
+  | EOF                                                 %{ return new Program([], parser.__macroList, createSourceLocation(null, @1, @1)); %}
   ;
 
 Statement
   : Comment
   | Block
+  | ExpressionStatement
   | MacroStatement
   | EmptyStatement
-  | ExpressionStatement
   | IfStatement
   | WhileStatement
   | ContinueStatement
@@ -178,14 +188,15 @@ Block
   ;
 
 StatementList
-  : StatementList Statement                             -> $1.concat($2);
+  : StatementList Statement                             -> $2 == null ? $1 : $1.concat($2);
   |                                                     -> [];
   ;
 
+/* todo: proper macro support */
 MacroStatement
-  : IDENTIFIER Statement                                -> new StaticMacroStatement(new Identifier($1), $2, createSourceLocation(null, @1, @2));
-  | IDENTIFIER '(' ')' Statement                        -> new MacroStatement(new Identifier($1), [], $4, createSourceLocation(null, @1, @4));
-  | IDENTIFIER '(' FormalParameterList ')' Statement    -> new MacroStatement(new Identifier($1), $3, $5, createSourceLocation(null, @1, @5));
+  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2), [], $3, createSourceLocation(null, @1, @3))); $$ = null; %}
+  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2), [], $5, createSourceLocation(null, @1, @5))); $$ = null; %}
+  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2), $4, $6, createSourceLocation(null, @1, @6))); $$ = null; %}
   ;
 
 FormalParameterList
@@ -365,13 +376,13 @@ PropertyNameAndValueList
   ;
 
 KeyValueExpression
-  : Expression ":" Expression                            -> new KeyValueExpression($1, $2, createSourceLocation(null, @1, @3));
-  | Expression                                           -> new KeyValueExpression($1, null, createSourceLocation(null, @1, @1));
+  : Expression ":" Expression                            -> new KeyValueExpression($1, $3, createSourceLocation(null, @1, @3));
+  | Expression                                           -> new KeyValueExpression(null, $1, createSourceLocation(null, @1, @1));
   ;
 
 Literal
   : NullLiteral
-  | NumericLiteral
+  | NumberLiteral
   | StringLiteral
   | CommandLiteral
   ;
@@ -380,7 +391,7 @@ NullLiteral
   : NULL                                                -> new NullLiteral(createSourceLocation(null, @1, @1));
   ;
 
-NumericLiteral
+NumberLiteral
   : NUMBER                                              -> new NumberLiteral(parseNumericLiteral($1), createSourceLocation(null, @1, @1));
   | INFINITY                                            -> new NumberLiteral(Infinity, createSourceLocation(null, @1, @1));
   | NAN                                                 -> new NumberLiteral(NaN, createSourceLocation(null, @1, @1));
@@ -457,7 +468,6 @@ CommandText
   | '('
   | ')'
   | ':'
-  | ';'
   | INVALID
   ;
 
@@ -479,13 +489,25 @@ function parseNumericLiteral(literal) {
   } else return Number(literal);
 }
 
-parser.ast = {};
+function addMacro(macro) {
+  var macroList = parser.__macroList;
+  var macroName = macro.id.name;
+  var paramCount = macro.params.length;
+
+  var macroItems;
+  if (macroItems = macroList[macroName]) {
+    if (macroItems[paramCount]) throw new Error('Parse Error: A macro with the footprint already exists');
+  } else macroItems = macroList[macroName] = {};
+
+  macroItems[paramCount] = macro;
+}
 
 /* AST Constructors */
 
-function Program(body, loc) {
+function Program(body, macros, loc) {
   this.type = "Program";
   this.body = body;
+  this.macros = macros;
   this.loc = loc;
 }
 parser.ast.Program = Program;
@@ -677,9 +699,9 @@ function MemberExpression(map, property, loc) {
 }
 parser.ast.MemberExpression = MemberExpression;
 
-function CallExpression(macro, params, loc) {
+function CallExpression(block, params, loc) {
   this.type = "CallExpression";
-  this.macro = macro;
+  this.block = block;
   this.params = params;
   this.loc = loc;
 }
