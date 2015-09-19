@@ -17,7 +17,8 @@ function compile(code) {
 
     var context = new Context();
     return {
-        result: execute(ast, context),
+        execution: execute(ast, context),
+        compiled: context.blockBranches,
         context: context
     };
 }

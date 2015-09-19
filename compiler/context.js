@@ -8,11 +8,29 @@ function Context() {
     this.blockBranches = [[]];
     this.currentBranch = 0;
 
+    this.executionTree = [];
+    this.currentExecutionTree = { parent: null, children: this.executionTree };
+
     this.macros = {};
 
     this.scopes = [];
     this.pushScope();
 }
+
+Context.prototype.executionTreeStart = function(data) {
+    var children = [], newItem = {
+        data: data,
+        children: children,
+        parent: this.currentExecutionTree
+    };
+
+    this.currentExecutionTree.children.push(newItem);
+    this.currentExecutionTree = newItem;
+};
+Context.prototype.executionTreeStop = function() {
+    if (this.currentExecutionTree.parent == null) return;
+    this.currentExecutionTree = this.currentExecutionTree.parent;
+};
 
 Context.prototype.pushToBranch = function(obj) {
     this.blockBranches[this.currentBranch].push(obj);
@@ -46,13 +64,16 @@ Context.prototype.fork = function() {
 
 Context.prototype.pushScope = function() {
     this.scopes.unshift({});
-    console.log("++ SCOPE " + this.getDefinedString());
+    this.executionTreeStart({
+        type: "scope",
+        id: this.scopes.length - 1
+    });
 };
 
 Context.prototype.popScope = function() {
     this.scopes.shift();
+    this.executionTreeStop();
     if (!this.scopes.length) this.pushScope();
-    console.log("-- SCOPE " + this.getDefinedString());
 };
 
 Context.prototype.getDefinedString = function() {

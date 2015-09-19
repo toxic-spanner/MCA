@@ -1,7 +1,3 @@
-var indent = 0, latestType = false;
-
-var term = require('terminal-kit').terminal;
-
 function execute(statements, ctx) {
     return execute.create(statements, ctx).start();
 }
@@ -34,68 +30,27 @@ execute.create = function(statements, ctx) {
     }
     function executeItem(item) {
         if (!useNodes[item.type]) {
-            term.brightRed((new Array(indent)).join(" ") + "<WARN>\n");
-            term.right(indent + 3);
-            term.brightRed("No node called " + item.type + ": ");
-            console.log(require('util').inspect(item, {color: true}));
-            term.right(indent - 1);
-            term.brightRed("</WARN>\n");
+            ctx.executionTreeStart({ type: "warning", node: item });
+            ctx.executionTreeStop();
             return null;
         }
 
-        //console.log("Executing", require('util').inspect(item, {colors: true}));
-
-
-
-        var locSection = "(" + item.loc.start.line + "," + item.loc.start.column + ")";
-        term.cyan((new Array(indent)).join(" ") + "<" + item.type);
-        term.yellow(locSection);
-
-        var paramLength = 0;
-
-        for (var key in item) {
-            if (key === "type") continue;
-            if (typeof item[key] !== "string" && typeof item[key] !== "number" && typeof item[key] !== "boolean") continue;
-            term.magenta(" " + key);
-            term.brightBlue("(" + (typeof key) + ")");
-            term.magenta('="' + item[key] + '"');
-            paramLength += 6 + key.length + (typeof key).length + item[key].toString().length;
-        }
-        term.cyan(">\n");
-
-        latestType = item.type;
-        indent += 4;
+        var obj;
+        ctx.executionTreeStart(obj = {
+            type: "node",
+            node: item
+        });
 
         try {
             var result = useNodes[item.type](item, ctx, subExecute);
         } catch (ex) {
-            if (!ex._mca && !ex._mcaHasShown && console) {
-                console.error("Internal compiler exception!");
-                if (ex.stack) console.warn(ex.stack);
-                else console.warn(ex.name + ": " + ex.message);
-                ex._mcaHasShown = true;
-            }
-
             // attach location information and re-throw
             if (!ex.loc) ex.loc = item.loc;
             throw ex;
         }
 
-        indent -= 4;
-        if (latestType === item.type) {
-            term.up(1);
-            term.right(indent + latestType.length + locSection.length + paramLength);
-            term.yellow(" (" + item.loc.end.line + "," + item.loc.end.column + ")");
-            term.green("/>\n");
-        }
-        else {
-            term.green((new Array(indent)).join(" ") + "</" + item.type);
-            term.yellow("(" + item.loc.end.line + "," + item.loc.end.column + ")");
-            term.green(">\n");
-        }
-
-        //console.log("Variables:", ctx.scopes);
-
+        ctx.executionTreeStop();
+        obj.result = result;
         return result;
     }
 
