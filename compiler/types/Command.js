@@ -4,6 +4,10 @@ function Command(name, params) {
 
     this.isCommand = true;
 }
+Command.prototype.toJSON = function() {
+    return Command.toJSON(this);
+};
+
 Command.type = "command";
 Command.matches = function(command) {
     return command && command.isCommand;

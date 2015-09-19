@@ -9,6 +9,12 @@ function Hashmap() {
     this.numberKeys = {};
 }
 
+Hashmap.prototype.toJSON = function() {
+    return Hashmap.toJSON(this, function(item) {
+        return item.toJSON ? item.toJSON() : item;
+    });
+};
+
 Hashmap.prototype.keys = function() {
     return this.stringKeyNames.concat(this.numberKeyNames);
 };
