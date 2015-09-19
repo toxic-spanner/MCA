@@ -76,6 +76,8 @@ StringLiteral                                                               (\"{
 "null"                                                                      return 'NULL';
 "infinity"                                                                  return 'INFINITY';
 "nan"                                                                       return 'NAN';
+"true"                                                                      return 'TRUE';
+"false"                                                                     return 'FALSE';
 
 {Identifier}                                                                return 'IDENTIFIER';
 
@@ -85,8 +87,6 @@ StringLiteral                                                               (\"{
 
 "=="                                                                        return 'EQUAL';
 "!="                                                                        return 'NOT_EQUAL';
-">="                                                                        return 'GTE';
-"<="                                                                        return 'LTE';
 "!"                                                                         return '!';
 
 "++"                                                                        return 'INCREMENT';
@@ -103,6 +103,11 @@ StringLiteral                                                               (\"{
 "&="                                                                        return 'ASSIGN_BAND';
 "^="                                                                        return 'ASSIGN_XOR';
 "|="                                                                        return 'ASSIGN_BOR';
+
+">="                                                                        return 'GTE';
+"<="                                                                        return 'LTE';
+">"                                                                         return '>';
+"<"                                                                         return '<';
 
 "="                                                                         return '=';
 
@@ -395,6 +400,8 @@ NumberLiteral
   : NUMBER                                              -> new NumberLiteral(parseNumericLiteral($1), createSourceLocation(null, @1, @1));
   | INFINITY                                            -> new NumberLiteral(Infinity, createSourceLocation(null, @1, @1));
   | NAN                                                 -> new NumberLiteral(NaN, createSourceLocation(null, @1, @1));
+  | TRUE                                                -> new NumberLiteral(1, createSourceLocation(null, @1, @1));
+  | FALSE                                               -> new NumberLiteral(0, createSourceLocation(null, @1, @1));
   ;
 
 StringLiteral
