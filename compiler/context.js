@@ -4,12 +4,45 @@ var errors = require('./errors');
 var types = require('./types');
 
 function Context() {
-    this.commandStructure = [];
+    //this.commandStructure = [];
+    this.blockBranches = [[]];
+    this.currentBranch = 0;
+
     this.macros = {};
 
     this.scopes = [];
     this.pushScope();
 }
+
+Context.prototype.pushToBranch = function(obj) {
+    this.blockBranches[this.currentBranch].push(obj);
+};
+Context.prototype.pushCommand = function(name, params) {
+    this.pushToBranch({
+        type: "command",
+        command: name,
+        params: params
+    });
+};
+
+Context.prototype.pushWait = function(duration) {
+    this.pushToBranch({
+        type: "wait",
+        duration: duration
+    });
+};
+
+Context.prototype.branchTo = function(id) {
+    this.pushToBranch({
+        type: "branch",
+        id: id
+    });
+    this.currentBranch = id;
+};
+
+Context.prototype.fork = function() {
+    return this.blockBranches.push([]) - 1;
+};
 
 Context.prototype.pushScope = function() {
     this.scopes.unshift({});

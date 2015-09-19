@@ -3,6 +3,7 @@ if (process.argv.length < 3) {
 } else {
     var compiler = require('./');
     var fs = require('fs');
+    var util = require('util');
 
     var contents = fs.readFileSync(process.argv[2], 'utf8');
 
@@ -21,11 +22,9 @@ if (process.argv.length < 3) {
         console.timeEnd("execute");
         console.timeEnd("overall");
 
-        console.log(">", require('util').inspect(result.result, {colors: true}));
+        console.log(">", util.inspect(result.result, {colors: true}));
         console.log("Commands:");
-        console.log(result.context.commandStructure.map(function (item) {
-            return types.Command.cast.string(item);
-        }).join("\n"));
+        console.log(util.inspect(result.context.blockBranches, {colors: true}));
 
     } catch (ex) {
         if (ex.loc) ex.message += " on line " + ex.loc.start.line + " column " + ex.loc.start.column;

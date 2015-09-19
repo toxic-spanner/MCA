@@ -7,8 +7,7 @@ exports.call = function(node, ctx, execute) {
         return ctx.castString(execute(item));
     });
 
-    var params = paramValues.join("");
-    var commandObject = new Command(node.name, params);
-    ctx.commandStructure.push(commandObject);
-    return commandObject;
+    var params = paramValues.join("").trim();
+    ctx.pushCommand(node.name, params);
+    return new Command(node.name, params);
 };
