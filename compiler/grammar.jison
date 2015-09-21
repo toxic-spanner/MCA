@@ -200,9 +200,9 @@ StatementList
 
 /* todo: proper macro support */
 MacroStatement
-  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2), [], $3, createSourceLocation(null, @1, @3))); $$ = null; %}
-  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2), [], $5, createSourceLocation(null, @1, @5))); $$ = null; %}
-  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2), $4, $6, createSourceLocation(null, @1, @6))); $$ = null; %}
+  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), [], $3, createSourceLocation(null, @1, @3))); $$ = null; %}
+  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), [], $5, createSourceLocation(null, @1, @5))); $$ = null; %}
+  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), $4, $6, createSourceLocation(null, @1, @6))); $$ = null; %}
   ;
 
 FormalParameterList

@@ -105,13 +105,13 @@ case 18: case 40:
 this.$ = [];;
 break;
 case 19:
- addMacro(new MacroStatement(new Identifier($$[$0-1]), [], $$[$0], createSourceLocation(null, _$[$0-2], _$[$0]))); this.$ = null; 
+ addMacro(new MacroStatement(new Identifier($$[$0-1], createSourceLocation(null, _$[$0-1], _$[$0-1])), [], $$[$0], createSourceLocation(null, _$[$0-2], _$[$0]))); this.$ = null; 
 break;
 case 20:
- addMacro(new MacroStatement(new Identifier($$[$0-3]), [], $$[$0], createSourceLocation(null, _$[$0-4], _$[$0]))); this.$ = null; 
+ addMacro(new MacroStatement(new Identifier($$[$0-3], createSourceLocation(null, _$[$0-3], _$[$0-3])), [], $$[$0], createSourceLocation(null, _$[$0-4], _$[$0]))); this.$ = null; 
 break;
 case 21:
- addMacro(new MacroStatement(new Identifier($$[$0-4]), $$[$0-2], $$[$0], createSourceLocation(null, _$[$0-5], _$[$0]))); this.$ = null; 
+ addMacro(new MacroStatement(new Identifier($$[$0-4], createSourceLocation(null, _$[$0-4], _$[$0-4])), $$[$0-2], $$[$0], createSourceLocation(null, _$[$0-5], _$[$0]))); this.$ = null; 
 break;
 case 22: case 113: case 130:
 this.$ = [$$[$0]];;
