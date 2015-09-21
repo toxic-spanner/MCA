@@ -96,7 +96,7 @@ Hashmap.prototype.stringFor = function(call) {
 
 Hashmap.prototype.numericFor = function(call) {
     var numberLength = this.numberKeyNames.length;
-    var i, keyname;
+    var i, keyName;
 
     for (i = 0; i < numberLength; i++) {
         keyName = this.numberKeyNames[i];
@@ -132,7 +132,6 @@ Hashmap.prototype.getIndex = function(key) {
     } else if (this.stringKeys.hasOwnProperty(key)) return this.stringKeys[key];
 
     errors.referenceError("Unknown map index " + key);
-    //return null;
 };
 
 Hashmap.fromKeyValueList = function(list) {

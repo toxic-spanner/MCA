@@ -1,4 +1,3 @@
-var EventEmitter = require('events').EventEmitter;
 var errors = require('./errors');
 
 var types = require('./types');
@@ -21,7 +20,10 @@ Context.prototype.executionTreeStart = function(data) {
     var children = [], newItem = {
         data: data,
         children: children,
-        parent: this.currentExecutionTree
+        parent: this.currentExecutionTree,
+        toJSON: function() {
+            return { data: data, children: children };
+        }
     };
 
     this.currentExecutionTree.children.push(newItem);
@@ -29,7 +31,9 @@ Context.prototype.executionTreeStart = function(data) {
 };
 Context.prototype.executionTreeStop = function() {
     if (this.currentExecutionTree.parent == null) return;
-    this.currentExecutionTree = this.currentExecutionTree.parent;
+    var currentItem = this.currentExecutionTree;
+
+    this.currentExecutionTree = currentItem.parent;
 };
 
 Context.prototype.pushToBranch = function(obj) {
@@ -74,14 +78,6 @@ Context.prototype.popScope = function() {
     this.scopes.shift();
     this.executionTreeStop();
     if (!this.scopes.length) this.pushScope();
-};
-
-Context.prototype.getDefinedString = function() {
-    var scopeLength = this.scopes.length;
-    var defined = Object.keys(this.scopes[scopeLength - 1]);
-    if (scopeLength > 1) defined = defined.concat(Object.keys(this.scopes[0]));
-
-    return "(count: " + scopeLength + ") defined: " + defined.join(", ");
 };
 
 Context.prototype.findVariableScope = function(name) {
@@ -181,7 +177,7 @@ Context.prototype.castMap = function(value) {
 };
 
 Context.prototype.expectNumber = function(value) {
-    return types.number.matches(value);
+    if (!types.number.matches(value)) errors.typeError("Expected number");
 };
 
 Context.prototype.expectString = function(value) {
