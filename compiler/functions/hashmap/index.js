@@ -2,6 +2,7 @@ module.exports = [
     require('./map_concat'),
     require('./map_concatTo'),
     require('./map_fill'),
+    require('./map_hasKey'),
     require('./map_includes'),
     require('./map_indexOf'),
     require('./map_join'),
