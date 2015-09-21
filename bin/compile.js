@@ -87,11 +87,12 @@ var logFunc = console.log, arrayJoin = [].join;
 var log = (function() {
     if (isFriendly) return function() { return logFunc };
     return function(tag) {
-        /*return function () {
-            //var out = arrayJoin.call(arguments, "\n");
-            //logFunc("[output] " + out.split("\n").join("\n[" + tag + "] "));
-            logFunc.apply
-        }*/
+        if (tag) {
+            return function () {
+                var out = arrayJoin.call(arguments, "\n");
+                logFunc("[" + tag + "] " + out.split("\n").join("\n[" + tag + "] "));
+            }
+        }
         return logFunc;
     }
 }());
@@ -150,7 +151,7 @@ function ready() {
                 showTreeNode(tree[i]);
             }
         } else {
-            log("tree")(JSON.stringify(result.context.executionTree));
+            log()(JSON.stringify(result.context.executionTree));
         }
     }
     if (showResult) {
@@ -161,7 +162,7 @@ function ready() {
             if (executionResult && executionResult.toJSON) executionResult = executionResult.toJSON();
             console.log(util.inspect(executionResult, { colors: true }));
         } else {
-            log("result")(JSON.stringify(result.execution));
+            log()(JSON.stringify(result.execution));
         }
     }
 
@@ -173,7 +174,7 @@ function ready() {
                 console.log(common.sectionHeader("\nCompiled MCIL:"));
                 showCompiledResult(result.compiled);
             } else {
-                log("compiled")(stringCompiled);
+                log()(stringCompiled);
             }
         }
 
