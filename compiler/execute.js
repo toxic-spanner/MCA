@@ -1,20 +1,22 @@
-function execute(statements, ctx) {
-    return execute.create(statements, ctx).start();
+function execute(statements, ctx, parentNodes) {
+    return execute.create(statements, ctx, parentNodes).start();
 }
 
-execute.create = function(statements, ctx) {
+execute.create = function(statements, ctx, parentNodes) {
+    parentNodes = parentNodes || nodes;
     var useNodes = {};
 
-    for (var type in nodes) {
-        if (!nodes.hasOwnProperty(type)) continue;
-        useNodes[type] = nodes[type].call;
+    for (var type in parentNodes) {
+        if (!parentNodes.hasOwnProperty(type)) continue;
+        var parent = parentNodes[type];
+        useNodes[type] = typeof parent === "function" ? parent : parent.call;
     }
 
     function subExecute(statements) {
-        return execute(statements, ctx);
+        return execute(statements, ctx, useNodes);
     }
     subExecute.create = function(statements) {
-        return execute.create(statements, ctx);
+        return execute.create(statements, ctx, useNodes);
     };
 
     var isRunning = false;
