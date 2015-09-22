@@ -143,7 +143,7 @@ Hashmap.fromKeyValueList = function(list) {
         if (key == null) key = nextAuto++;
 
         if (typeof key === "number") {
-            if (item.value >= nextAuto) nextAuto = item.value + 1;
+            if (key >= nextAuto) nextAuto = item.value + 1;
             map.numberKeys[key] = item.value;
             map.numberKeyNames.push(key);
         } else {
