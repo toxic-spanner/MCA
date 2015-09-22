@@ -136,6 +136,7 @@ function ready() {
         var endTime = Date.now();
     } catch (ex) {
         console.log = logFunc;
+        if (ex.loc) ex.message += " at " + ex.loc.start.line + ":" + ex.loc.start.column;
         common.showError("Could not execute AST", ex);
     }
 

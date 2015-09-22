@@ -23,8 +23,8 @@ exports.command = clc.cyan;
 exports.commandContent = clc.magenta;
 
 exports.showError = function(header, ex) {
-    console.error(common.errorHeader(header));
-    console.error(common.errorMessage(ex && ex.stack ? ex.stack : ex));
+    console.error(exports.errorHeader(header));
+    console.error(exports.errorMessage(ex && ex.stack ? ex.stack : ex));
     process.exit(1);
 };
 

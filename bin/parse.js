@@ -82,7 +82,8 @@ if (code) {
     ready();
 } else if (process.argv.length > 2) {
     try {
-        parseCode = fs.readFileSync(process.argv[2]);
+        parseCode = fs.readFileSync(process.argv[2], 'utf8');
+        ready();
     } catch (ex) {
         common.showError("Could not read MCA file", ex);
     }
