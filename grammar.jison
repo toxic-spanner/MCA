@@ -392,8 +392,8 @@ PropertyNameAndValueList
   ;
 
 KeyValueExpression
-  : Expression ":" Expression                            -> new KeyValueExpression($1, $3, createSourceLocation(null, @1, @3));
-  | Expression                                           -> new KeyValueExpression(null, $1, createSourceLocation(null, @1, @1));
+  : Expression ":" Expression                           -> new KeyValueExpression($1, $3, createSourceLocation(null, @1, @3));
+  | Expression                                          -> new KeyValueExpression(null, $1, createSourceLocation(null, @1, @1));
   ;
 
 Literal
