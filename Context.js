@@ -1,6 +1,6 @@
 var errors = require('./errors');
-
 var types = require('./types');
+var constants = require('./constants');
 
 function Context() {
     //this.commandStructure = [];
@@ -11,6 +11,13 @@ function Context() {
     this.currentExecutionTree = { parent: null, children: this.executionTree };
 
     this.macros = {};
+    // add constants
+    for (var i = 0; i < constants.length; i++) {
+        var constantList = constants[i];
+        for (var name in constantList) {
+            if (constantList.hasOwnProperty(name)) this.macros[name.toLowerCase()] = constantList[name];
+        }
+    }
 
     this.scopes = [];
     this.pushScope();

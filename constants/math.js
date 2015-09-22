@@ -1,0 +1,12 @@
+exports.E = Math.E;
+exports.LN2 = Math.LN2;
+exports.LN10 = Math.LN10;
+exports.LOG2E = Math.LOG2E;
+exports.LOG10E = Math.LOG10E;
+exports.PI = Math.PI;
+exports.PI2 = Math.PI * 2;
+exports.PI1_2 = Math.PI / 2;
+exports.RAD_DEG = Math.PI / 180;
+exports.DEG_RAD = 180 / Math.PI;
+exports.SQRT1_2 = Math.SQRT1_2;
+exports.SQRT2 = Math.SQRT2;
