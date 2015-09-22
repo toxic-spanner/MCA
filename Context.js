@@ -61,10 +61,11 @@ Context.prototype.pushWait = function(duration) {
     });
 };
 
-Context.prototype.branchTo = function(id) {
+Context.prototype.branchTo = function(id, test) {
     this.pushToBranch({
         type: "branch",
-        id: id
+        id: id,
+        test: test
     });
     this.currentBranch = id;
 };
