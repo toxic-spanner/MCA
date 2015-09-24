@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var fs = require('fs');
-var util = require('util');
+var path = require('path');
 
 var compiler = require('../');
 var common = require('./common');
@@ -75,7 +75,7 @@ function showHelp() {
     process.exit(1);
 }
 
-var parseCode = "";
+var parseCode = "", source = null;
 
 if (code) {
     parseCode = code;
@@ -83,6 +83,7 @@ if (code) {
 } else if (process.argv.length > 2) {
     try {
         parseCode = fs.readFileSync(process.argv[2], 'utf8');
+        source = path.resolve(process.cwd(), process.argv[2]);
         ready();
     } catch (ex) {
         common.showError("Could not read MCA file", ex);
@@ -100,7 +101,7 @@ function ready() {
     var ast;
     try {
         var startTime = Date.now();
-        ast = compiler.parse(parseCode);
+        ast = compiler.parse(parseCode, source);
         var endTime = Date.now();
     } catch (ex) {
         common.showError("Could not parse MCA text", ex);

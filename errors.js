@@ -45,3 +45,19 @@ exports.typeError = function(message, position) {
     ex.loc = position;
     throw ex;
 };
+
+exports.fileNotFoundError = function(message, position) {
+    var ex = new Error(message);
+    ex._mca = true;
+    ex.name = "FileNotFoundError";
+    ex.loc = position;
+    throw ex;
+};
+
+exports.syntaxError = function(message, position) {
+    var ex = new Error(message);
+    ex._mca = true;
+    ex.name = "SyntaxError";
+    ex.loc = position;
+    throw ex;
+};

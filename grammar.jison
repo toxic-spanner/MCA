@@ -157,7 +157,15 @@ StringLiteral                                                               (\"{
 %left '~'
 
 %{
-parser.__macroList = {};
+
+var _originalParserMethod = parser.parse;
+
+parser.parse = function(input, source) {
+  parser.__macroList = {};
+  parser.currentFile = source;
+  return _originalParserMethod.call(this, input);
+};
+
 parser.ast = {};
 %}
 
@@ -167,14 +175,13 @@ parser.ast = {};
 %%
 
 Program
-  : StatementList EOF                                   %{ return new Program($1, parser.__macroList, createSourceLocation(null, @1, @2)); %}
-  | EOF                                                 %{ return new Program([], parser.__macroList, createSourceLocation(null, @1, @1)); %}
+  : StatementList EOF                                   %{ return new Program($1, parser.__macroList, createSourceLocation(parser.currentFile, @1, @2)); %}
+  | EOF                                                 %{ return new Program([], parser.__macroList, createSourceLocation(parser.currentFile, @1, @1)); %}
   ;
 
 Statement
   : Comment
   | Block
-  | ImportStatement
   | ExpressionStatement
   | MacroStatement
   | EmptyStatement
@@ -187,16 +194,12 @@ Statement
   ;
 
 Comment
-  : LINE_COMMENT                                        -> new LineComment($1, createSourceLocation(null, @1, @1));
-  | BLOCK_COMMENT                                       -> new BlockComment($1, createSourceLocation(null, @1, @1));
+  : LINE_COMMENT                                        -> new LineComment($1, createSourceLocation(parser.currentFile, @1, @1));
+  | BLOCK_COMMENT                                       -> new BlockComment($1, createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 Block
-  : "{" StatementList "}"                               -> new BlockStatement($2, createSourceLocation(null, @1, @3));
-  ;
-
-ImportStatement
-  : IMPORT Expression                                   -> new ImportStatement($2, createSourceLocation(null, @1, @2));
+  : "{" StatementList "}"                               -> new BlockStatement($2, createSourceLocation(parser.currentFile, @1, @3));
   ;
 
 StatementList
@@ -206,9 +209,9 @@ StatementList
 
 /* todo: proper macro support */
 MacroStatement
-  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), [], $3, createSourceLocation(null, @1, @3))); $$ = null; %}
-  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), [], $5, createSourceLocation(null, @1, @5))); $$ = null; %}
-  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(null, @2, @2)), $4, $6, createSourceLocation(null, @1, @6))); $$ = null; %}
+  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $3, createSourceLocation(parser.currentFile, @1, @3))); $$ = null; %}
+  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $5, createSourceLocation(parser.currentFile, @1, @5))); $$ = null; %}
+  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), $4, $6, createSourceLocation(parser.currentFile, @1, @6))); $$ = null; %}
   ;
 
 FormalParameterList
@@ -217,43 +220,43 @@ FormalParameterList
   ;
 
 FormalParameterItem
-  : IDENTIFIER                                          -> new Identifier($1, createSourceLocation(null, @1, @1));
-  | OUT IDENTIFIER                                      -> new OutIdentifier($2, createSourceLocation(null, @1, @2));
+  : IDENTIFIER                                          -> new Identifier($1, createSourceLocation(parser.currentFile, @1, @1));
+  | OUT IDENTIFIER                                      -> new OutIdentifier($2, createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 EmptyStatement
-  : ";"                                                 -> new EmptyStatement(createSourceLocation(null, @1, @1));
+  : ";"                                                 -> new EmptyStatement(createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 ExpressionStatement
-  : Expression ";"                                      -> new ExpressionStatement($1, createSourceLocation(null, @1, @2));
+  : Expression ";"                                      -> new ExpressionStatement($1, createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 IfStatement
-  : IF "(" Expression ")" Statement                     -> new IfStatement($3, $5, null, createSourceLocation(null, @1, @5));
-  | IF "(" Expression ")" Statement ELSE Statement      -> new IfStatement($3, $5, $7, createSourceLocation(null, @1, @7));
+  : IF "(" Expression ")" Statement                     -> new IfStatement($3, $5, null, createSourceLocation(parser.currentFile, @1, @5));
+  | IF "(" Expression ")" Statement ELSE Statement      -> new IfStatement($3, $5, $7, createSourceLocation(parser.currentFile, @1, @7));
   ;
 
 WhileStatement
-  : DO Statement WHILE "(" Expression ")" ";"           -> new DoWhileStatement($2, $5, createSourceLocation(null, @1, @7));
-  | WHILE "(" Expression ")" Statement                  -> new WhileStatement($3, $5, createSourceLocation(null, @1, @5));
+  : DO Statement WHILE "(" Expression ")" ";"           -> new DoWhileStatement($2, $5, createSourceLocation(parser.currentFile, @1, @7));
+  | WHILE "(" Expression ")" Statement                  -> new WhileStatement($3, $5, createSourceLocation(parser.currentFile, @1, @5));
   ;
 
 ContinueStatement
-  : CONTINUE ";"                                        -> new ContinueStatement(createSourceLocation(null, @1, @2));
+  : CONTINUE ";"                                        -> new ContinueStatement(createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 BreakStatement
-  : BREAK ";"                                           -> new BreakStatement(createSourceLocation(null, @1, @2));
+  : BREAK ";"                                           -> new BreakStatement(createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 ReturnStatement
-  : RETURN ";"                                          -> new ReturnStatement(null, createSourceLocation(null, @1, @2));
-  | RETURN Expression ";"                               -> new ReturnStatement($2, createSourceLocation(null, @1, @3));
+  : RETURN ";"                                          -> new ReturnStatement(null, createSourceLocation(parser.currentFile, @1, @2));
+  | RETURN Expression ";"                               -> new ReturnStatement($2, createSourceLocation(parser.currentFile, @1, @3));
   ;
 
 SwitchStatement
-  : SWITCH "(" Expression ")" CaseBlock                 -> new SwitchStatement($3, $5, createSourceLocation(null, @1, @5));
+  : SWITCH "(" Expression ")" CaseBlock                 -> new SwitchStatement($3, $5, createSourceLocation(parser.currentFile, @1, @5));
   ;
 
 CaseBlock
@@ -267,11 +270,11 @@ CaseClauses
   ;
 
 CaseClause
-  : CASE Expression ":" StatementList                   -> new SwitchCase($2, $4, createSourceLocation(null, @1, @4));
+  : CASE Expression ":" StatementList                   -> new SwitchCase($2, $4, createSourceLocation(parser.currentFile, @1, @4));
   ;
 
 DefaultClause
-  : DEFAULT ":" StatementList                           -> new SwitchCase(null, $3, createSourceLocation(null, @1, @3));
+  : DEFAULT ":" StatementList                           -> new SwitchCase(null, $3, createSourceLocation(parser.currentFile, @1, @3));
   ;
 
 AssignmentOperator
@@ -342,21 +345,22 @@ PostfixOperator
 Expression
   : '(' Expression ')'                                  -> $2
   | AssignmentExpression
-  | Expression LogicalOperator Expression               -> new LogicalExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | Expression BinaryOperator Expression                -> new BinaryExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | Expression ComparisonOperator Expression            -> new ComparisonExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | Expression ShiftOperator Expression                 -> new ShiftExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | Expression PlusMinusOperator Expression             -> new MathExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | Expression TimesDivideOperator Expression           -> new MathExpression($2, $1, $3, createSourceLocation(null, @1, @3));
-  | PrefixOperator Expression                           -> new UnaryExpression($2, $1, false, createSourceLocation(null, @1, @2));
-  | Expression PostfixOperator                          -> new UnaryExpression($1, false, $2, createSourceLocation(null, @1, @2));
+  | ImportExpression
+  | Expression LogicalOperator Expression               -> new LogicalExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression BinaryOperator Expression                -> new BinaryExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression ComparisonOperator Expression            -> new ComparisonExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression ShiftOperator Expression                 -> new ShiftExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression PlusMinusOperator Expression             -> new MathExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression TimesDivideOperator Expression           -> new MathExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | PrefixOperator Expression                           -> new UnaryExpression($2, $1, false, createSourceLocation(parser.currentFile, @1, @2));
+  | Expression PostfixOperator                          -> new UnaryExpression($1, false, $2, createSourceLocation(parser.currentFile, @1, @2));
   | Identifier
   | Literal
   | Block
-  | Expression '(' ')'                                  -> new CallExpression($1, [], createSourceLocation(null, @1, @3));
-  | Expression '(' ParameterList ')'                    -> new CallExpression($1, $3, createSourceLocation(null, @1, @4));
-  | INTERNAL_IDENTIFIER '(' ')'                         -> new InternalCallExpression($1, [], createSourceLocation(null, @1, @3));
-  | INTERNAL_IDENTIFIER '(' ParameterList ')'           -> new InternalCallExpression($1, $3, createSourceLocation(null, @1, @4));
+  | Expression '(' ')'                                  -> new CallExpression($1, [], createSourceLocation(parser.currentFile, @1, @3));
+  | Expression '(' ParameterList ')'                    -> new CallExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
+  | INTERNAL_IDENTIFIER '(' ')'                         -> new InternalCallExpression($1, [], createSourceLocation(parser.currentFile, @1, @3));
+  | INTERNAL_IDENTIFIER '(' ParameterList ')'           -> new InternalCallExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
   | MapExpression
   ;
 
@@ -371,8 +375,12 @@ ParameterItem
   ;
 
 AssignmentExpression
-  : Expression '=' Expression                           -> new AssignmentExpression("=", $1, $3, createSourceLocation(null, @1, @3));
-  | Expression AssignmentOperator Expression            -> new AssignmentExpression($2, $1, $3, createSourceLocation(null, @1, @3));
+  : Expression '=' Expression                           -> new AssignmentExpression("=", $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression AssignmentOperator Expression            -> new AssignmentExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  ;
+
+ImportExpression
+  : IMPORT Expression                                   -> new ImportExpression($2, createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 KeyLiteral
@@ -382,14 +390,14 @@ KeyLiteral
   ;
 
 Identifier
-  : IDENTIFIER                                          -> new Identifier($1, createSourceLocation(null, @1, @1));
-  | Expression '[' Expression ']'                       -> new MemberExpression($1, $3, createSourceLocation(null, @1, @4));
+  : IDENTIFIER                                          -> new Identifier($1, createSourceLocation(parser.currentFile, @1, @1));
+  | Expression '[' Expression ']'                       -> new MemberExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
   ;
 
 MapExpression
-  : "[" "]"                                             -> new MapExpression([], createSourceLocation(null, @1, @2));
-  | "[" PropertyNameAndValueList "]"                    -> new MapExpression($2, createSourceLocation(null, @1, @3));
-  | "[" PropertyNameAndValueList "," "]"                -> new MapExpression($2, createSourceLocation(null, @1, @4));
+  : "[" "]"                                             -> new MapExpression([], createSourceLocation(parser.currentFile, @1, @2));
+  | "[" PropertyNameAndValueList "]"                    -> new MapExpression($2, createSourceLocation(parser.currentFile, @1, @3));
+  | "[" PropertyNameAndValueList "," "]"                -> new MapExpression($2, createSourceLocation(parser.currentFile, @1, @4));
   ;
 
 PropertyNameAndValueList
@@ -398,8 +406,8 @@ PropertyNameAndValueList
   ;
 
 KeyValueExpression
-  : Expression ":" Expression                           -> new KeyValueExpression($1, $3, createSourceLocation(null, @1, @3));
-  | Expression                                          -> new KeyValueExpression(null, $1, createSourceLocation(null, @1, @1));
+  : Expression ":" Expression                           -> new KeyValueExpression($1, $3, createSourceLocation(parser.currentFile, @1, @3));
+  | Expression                                          -> new KeyValueExpression(null, $1, createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 Literal
@@ -410,24 +418,24 @@ Literal
   ;
 
 NullLiteral
-  : NULL                                                -> new NullLiteral(createSourceLocation(null, @1, @1));
+  : NULL                                                -> new NullLiteral(createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 NumberLiteral
-  : NUMBER                                              -> new NumberLiteral(parseNumericLiteral($1), createSourceLocation(null, @1, @1));
-  | INFINITY                                            -> new NumberLiteral(Infinity, createSourceLocation(null, @1, @1));
-  | NAN                                                 -> new NumberLiteral(NaN, createSourceLocation(null, @1, @1));
-  | TRUE                                                -> new NumberLiteral(1, createSourceLocation(null, @1, @1));
-  | FALSE                                               -> new NumberLiteral(0, createSourceLocation(null, @1, @1));
+  : NUMBER                                              -> new NumberLiteral(parseNumericLiteral($1), createSourceLocation(parser.currentFile, @1, @1));
+  | INFINITY                                            -> new NumberLiteral(Infinity, createSourceLocation(parser.currentFile, @1, @1));
+  | NAN                                                 -> new NumberLiteral(NaN, createSourceLocation(parser.currentFile, @1, @1));
+  | TRUE                                                -> new NumberLiteral(1, createSourceLocation(parser.currentFile, @1, @1));
+  | FALSE                                               -> new NumberLiteral(0, createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 StringLiteral
-  : STRING                                              -> new StringLiteral($1, createSourceLocation(null, @1, @1));
+  : STRING                                              -> new StringLiteral($1, createSourceLocation(parser.currentFile, @1, @1));
   ;
 
 CommandLiteral
-  : COMMAND_NAME                                        -> new CommandLiteral($1, [], createSourceLocation(null, @1, @1));
-  | COMMAND_NAME CommandArguments                       -> new CommandLiteral($1, $2, createSourceLocation(null, @1, @2));
+  : COMMAND_NAME                                        -> new CommandLiteral($1, [], createSourceLocation(parser.currentFile, @1, @1));
+  | COMMAND_NAME CommandArguments                       -> new CommandLiteral($1, $2, createSourceLocation(parser.currentFile, @1, @2));
   ;
 
 CommandArguments
@@ -573,12 +581,6 @@ function BlockStatement(body, loc) {
 }
 parser.ast.BlockStatement = BlockStatement;
 
-function ImportStatement(file, loc) {
-  this.type = "ImportStatement";
-  this.file = file;
-  this.loc = loc;
-}
-
 function StaticMacroStatement(id, body, loc) {
   this.type = "StaticMacroStatement";
   this.id = id;
@@ -668,6 +670,13 @@ function SwitchCase(test, consequent, loc) {
   this.loc = loc;
 }
 parser.ast.SwitchCase = SwitchCase;
+
+function ImportExpression(file, loc) {
+  this.type = "ImportExpression";
+  this.file = file;
+  this.loc = loc;
+}
+parser.ast.ImportExpression = ImportExpression;
 
 function OutExpression(expression, loc) {
   this.type = "OutExpression";

@@ -15,6 +15,7 @@ module.exports = require('../getResource')([
     require('./BinaryExpression'),
     require('./CallExpression'),
     require('./ComparisonExpression'),
+    require('./ImportExpression'),
     require('./InternalCallExpression'),
     require('./KeyValueExpression'),
     require('./LogicalExpression'),
