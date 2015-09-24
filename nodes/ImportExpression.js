@@ -14,8 +14,10 @@ exports.call = function(node, ctx, execute) {
     var currentFile = node.loc.source;
     var source;
 
-    if (currentFile) source = path.resolve(path.dirname(currentFile), file);
-    else source = path.resolve(process.cwd(), file);
+    if (currentFile) {
+        if (includedList.indexOf(currentFile) === -1) includedList.push(currentFile);
+        source = path.resolve(path.dirname(currentFile), file);
+    } else source = path.resolve(process.cwd(), file);
 
     // dont include a file more than once
     if (includedList.indexOf(source) !== -1) return;
