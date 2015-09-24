@@ -73,6 +73,7 @@ StringLiteral                                                               (\"{
 "break"                                                                     return 'BREAK';
 "default"                                                                   return 'DEFAULT';
 "return"                                                                    return 'RETURN';
+"import"                                                                    return 'IMPORT';
 
 "null"                                                                      return 'NULL';
 "infinity"                                                                  return 'INFINITY';
@@ -173,6 +174,7 @@ Program
 Statement
   : Comment
   | Block
+  | ImportStatement
   | ExpressionStatement
   | MacroStatement
   | EmptyStatement
@@ -191,6 +193,10 @@ Comment
 
 Block
   : "{" StatementList "}"                               -> new BlockStatement($2, createSourceLocation(null, @1, @3));
+  ;
+
+ImportStatement
+  : IMPORT Expression                                   -> new ImportStatement($2, createSourceLocation(null, @1, @2));
   ;
 
 StatementList
@@ -445,6 +451,8 @@ CommandText
   | CASE
   | BREAK
   | DEFAULT
+  | RETURN
+  | IMPORT
   | INFINITY
   | NAN
   | IDENTIFIER
@@ -564,6 +572,12 @@ function BlockStatement(body, loc) {
   this.loc = loc;
 }
 parser.ast.BlockStatement = BlockStatement;
+
+function ImportStatement(file, loc) {
+  this.type = "ImportStatement";
+  this.file = file;
+  this.loc = loc;
+}
 
 function StaticMacroStatement(id, body, loc) {
   this.type = "StaticMacroStatement";
