@@ -79,6 +79,10 @@ Alternatively, offloading file reading to `cat`:
 cat somefile.mca | mca-parse -s | mca-compile -c -f
 ```
 
+## Roadmap
+
+The language and compiler roadmap is available in [the ROADMAP file](https://github.com/toxic-spanner/mca-compiler/blob/master/ROADMAP.md).
+
 ## License
 
 The MCA compiler is licensed under the MIT license. More information is available in the LICENSE file.
