@@ -180,8 +180,13 @@ Program
   ;
 
 Statement
-  : Comment
+  : StatementNoBlock
   | Block
+  ;
+
+StatementNoBlock
+  : Comment
+  | BlockBody
   | ExpressionStatement
   | MacroStatement
   | EmptyStatement
@@ -199,7 +204,13 @@ Comment
   ;
 
 Block
-  : "{" StatementList "}"                               -> new BlockStatement($2, createSourceLocation(parser.currentFile, @1, @3));
+  : '(' ')' BlockBody                                   -> new BlockStatement([], $3, createSourceLocation(parser.currentFile, @1, @3));
+  | '(' FormalParameterList ')' BlockBody               -> new BlockStatement($2, $4, createSourceLocation(parser.currentFile, @1, @4));
+  | BlockBody                                           -> new BlockStatement([], $1, createSourceLocation(parser.currentFile, @1, @1));
+  ;
+
+BlockBody
+  : '{' StatementList '}'                               -> new BlockBodyStatement($2, createSourceLocation(parser.currentFile, @1, @3));
   ;
 
 StatementList
@@ -209,9 +220,9 @@ StatementList
 
 /* todo: proper macro support */
 MacroStatement
-  : '#' IDENTIFIER Statement                                %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $3, createSourceLocation(parser.currentFile, @1, @3))); $$ = null; %}
-  | '#' IDENTIFIER '(' ')' Statement                        %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $5, createSourceLocation(parser.currentFile, @1, @5))); $$ = null; %}
-  | '#' IDENTIFIER '(' FormalParameterList ')' Statement    %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), $4, $6, createSourceLocation(parser.currentFile, @1, @6))); $$ = null; %}
+  : '#' IDENTIFIER StatementNoBlock                             %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $3, createSourceLocation(parser.currentFile, @1, @3))); $$ = null; %}
+  | '#' IDENTIFIER '(' ')' StatementNoBlock                     %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), [], $5, createSourceLocation(parser.currentFile, @1, @5))); $$ = null; %}
+  | '#' IDENTIFIER '(' FormalParameterList ')' StatementNoBlock %{ addMacro(new MacroStatement(new Identifier($2, createSourceLocation(parser.currentFile, @2, @2)), $4, $6, createSourceLocation(parser.currentFile, @1, @6))); $$ = null; %}
   ;
 
 FormalParameterList
@@ -344,6 +355,9 @@ PostfixOperator
 
 Expression
   : '(' Expression ')'                                  -> $2
+  | Block
+  | Expression '(' ')'                                  -> new CallExpression($1, [], createSourceLocation(parser.currentFile, @1, @3));
+  | Expression '(' ParameterList ')'                    -> new CallExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
   | AssignmentExpression
   | ImportExpression
   | Expression LogicalOperator Expression               -> new LogicalExpression($2, $1, $3, createSourceLocation(parser.currentFile, @1, @3));
@@ -356,9 +370,6 @@ Expression
   | Expression PostfixOperator                          -> new UnaryExpression($1, false, $2, createSourceLocation(parser.currentFile, @1, @2));
   | Identifier
   | Literal
-  | Block
-  | Expression '(' ')'                                  -> new CallExpression($1, [], createSourceLocation(parser.currentFile, @1, @3));
-  | Expression '(' ParameterList ')'                    -> new CallExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
   | INTERNAL_IDENTIFIER '(' ')'                         -> new InternalCallExpression($1, [], createSourceLocation(parser.currentFile, @1, @3));
   | INTERNAL_IDENTIFIER '(' ParameterList ')'           -> new InternalCallExpression($1, $3, createSourceLocation(parser.currentFile, @1, @4));
   | MapExpression
@@ -574,12 +585,19 @@ function BlockComment(text, loc) {
 }
 parser.ast.BlockComment = BlockComment;
 
-function BlockStatement(body, loc) {
+function BlockStatement(params, body, loc) {
   this.type = "BlockStatement";
+  this.params = params;
   this.body = body;
   this.loc = loc;
 }
 parser.ast.BlockStatement = BlockStatement;
+
+function BlockBodyStatement(body, loc) {
+  this.type = "BlockBodyStatement";
+  this.body = body;
+  this.loc = loc;
+}
 
 function StaticMacroStatement(id, body, loc) {
   this.type = "StaticMacroStatement";

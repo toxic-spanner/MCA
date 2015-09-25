@@ -29,8 +29,9 @@ Block.prototype.getOverload = function(name) {
                 ctx.setVariable(paramDef.name, params[i], 0);
             }
 
-            if (overload.block.type === "BlockStatement") {
-                var executor = execute.create(overload.block.body, ctx);
+
+            if (overload.block.type === "BlockBodyStatement") {
+                var executor = execute.create(overload.block, ctx);
                 executor.use('ReturnStatement', function (statement) {
                     if (statement.argument) result = execute(statement.argument, ctx);
                     executor.stop();

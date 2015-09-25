@@ -92,7 +92,7 @@ exports.startSpecialTag = function(tagStyle, keyStyle, typeStyle, valueStyle, na
 
     var tagStart = tagStyle("<" + name);
     if (attributeText.length) tagStart += " " + attributeText;
-    console.log(tagStart + exports.tag(">"));
+    console.log(tagStart + tagStyle(">"));
 
     exports.indent += indentAmount;
 };

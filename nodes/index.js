@@ -1,4 +1,5 @@
 module.exports = require('../getResource')([
+    require('./BlockBodyStatement'),
     require('./BlockStatement'),
     require('./BreakStatement'),
     require('./ContinueStatement'),

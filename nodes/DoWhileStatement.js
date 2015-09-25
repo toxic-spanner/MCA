@@ -2,7 +2,7 @@ exports.type = "DoWhileStatement";
 exports.call = function(node, ctx, execute) {
     // todo: refactor with 'while' statement
     function nextItem() {
-        var executor = execute.create(node.body.type === "BlockStatement" ? node.body.body : node.body);
+        var executor = execute.create(node.body);
         var shouldBreak = false;
 
         executor.use('ContinueStatement', function() {
