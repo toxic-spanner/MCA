@@ -113,6 +113,9 @@ if (process.argv.length > 2) {
         var chunk = process.stdin.read();
         if (chunk !== null) astText += chunk;
     });
+    process.stdin.on('error', function() {
+        process.exit(1);
+    });
     process.stdin.on('end', ready);
 }
 

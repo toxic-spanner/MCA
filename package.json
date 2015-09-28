@@ -4,10 +4,13 @@
   "description": "Compiles MCA code to MCIL",
   "main": "index.js",
   "dependencies": {
-    "cli-color": "^1.0.0"
+    "cli-color": "^1.0.0",
+    "tmp": "0.0.28",
+    "which": "^1.1.2"
   },
   "devDependencies": {},
   "bin": {
+    "mca-build": "./bin/build.js",
     "mca-compile": "./bin/compile.js",
     "mca-parse": "./bin/parse.js"
   },

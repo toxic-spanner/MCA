@@ -94,6 +94,9 @@ if (code) {
         var chunk = process.stdin.read();
         if (chunk !== null) parseCode += chunk;
     });
+    process.stdin.on('error', function() {
+        process.exit(1);
+    });
     process.stdin.on('end', ready);
 }
 
