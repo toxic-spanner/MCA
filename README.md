@@ -10,6 +10,8 @@ This repository contains the MCA parser and compiler, which compiles to an inter
 
 Documentation on the MCA language is at [toxic-spanner.github.io/mca-language](https://toxic-spanner.github.io/mca-language).
 
+_Want to do more things? Check out [ArcReactor](https://github.com/toxic-spanner/ArcReactor) - an all-purpose library for MCA._
+
 ## Installation
 
 The compiler is availabe from [NPM](https://npmjs.org/).
