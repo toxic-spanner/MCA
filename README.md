@@ -4,7 +4,7 @@ MCA is an assembly language that compiles to Minecraft circuitry, specifically C
 
 This repository contains the MCA parser and compiler, which compiles to an intermediatery language named MCIL, as well as a set of command-line tools for compiling and debugging.
 
-Documentation on the MCA language is contained in the [wiki](https://github.com/toxic-spanner/mca-compiler/wiki).
+Documentation on the MCA language is at [toxic-spanner.github.io/mca-language](https://toxic-spanner.github.io/mca-language).
 
 ## Installation
 
@@ -22,9 +22,32 @@ $ npm install mca-compiler --save
 
 ## Command-line Usage
 
-The compiler provides two commands to facilitate with parsing, compilation, and debugging.
+### Basic Usage
 
-### Parsing
+The compiler provides an all-in-one command, `build`, to simplify the build process. For more options, such as the ability to export the AST, or view various execution data, see the commands covered in the **Advanced usage** section.
+
+The `mca-build` command is used to parse, compile, and then export the commands from some MCA code.
+
+Usage:
+```
+mca-build [file] <builder> [--help] [-w <width>] [--width <width>] [-h <height>]
+          [--height <height>] [-d <depth>] [--depth <depth>] [-c <input>] [--code <input>]
+          [-o <file>] [--output <file>]
+```
+
+`mca-build` takes input code from `--code` (`-c` for short), `[file]` (a file path), or stdin (in that order of preference), parses it, executes it, and then passes the result to a builder to export.
+
+If the `--output` flag (`-o` for short) is provided, the exported information from the builder will be written to the provided file - otherwise, it will be displayed on the console.
+
+`builder` should be the name of a global or local 'builder' NPM package, or a builder command. This builder takes the output MCIL code, and converts it to some kind of format. For most cases, the official [`mcil-mcedit`](https://github.com/toxic-spanner/mcil-mcedit) package should be sufficient, as it exports an MCEdit schematic file. The value of the `--width` (or `-w` for short), `--height` (`-h` for short) and `--depth` (`-d` for short) is passed to the builder to specify the maximum width (x-axis), height (y-axis) and depth (z-axis) for the resulting object.
+
+Builder packages should export a function `export(code, dimensions)`, where `code` is an MCIL object, and `dimensions` is an object with the properties `width`, `height`, and `depth`. Builder commands should accept arguments in the format `builder "<output>" --width <width> --height <height> --depth <depth>` where `<output>` is the name of the file to write the output to, and should take the MCIL JSON input via stdin.
+
+### Advanced Usage
+
+The compiler provides two advanced commands to facilitate with parsing, compilation, and debugging.
+
+#### Parsing
 
 The `mca-parse` command parses code and provides an abstract syntax tree (AST) in various formats.
 
@@ -40,7 +63,7 @@ The `--friendly` (or `-f`) flag formats the output of `--show` to be human-frien
 
 **Note:** setting the `--friendly` flag will _not_ affect what `--output` writes to the file. To write the friendly output to a file, use a pipe (e.g. with bash, `mca-parse somefile.mca --friendly > friendly_ast`).
 
-### Compiling
+#### Compiling
 
 The `mca-compile` command inputs an abstract syntax tree, and provides information on the execution of the code, as well as the compiled commands.
 
@@ -66,7 +89,7 @@ The `--log` (or `-l`) flag enables output from the program through the `.log` in
 
 The `--output` flag, or `-o` for short, is similar to `mca-parse`'s output flag. It writes the compiled MCIL code (with no `--friendly` formatting) to the provided file, relative to the current directory.
 
-### All together, now
+#### All together, now
 
 Both commands allow reading/writing from stdin and stdout respectively. This means that a file can be read, parsed, and compiled in one "command", such as the bash command, which will display the compiled MCIL in "friendly" mode:
 
@@ -77,6 +100,51 @@ mca-parse somefile.mca -s | mca-compile -c -f
 Alternatively, offloading file reading to `cat`:
 ```bash
 cat somefile.mca | mca-parse -s | mca-compile -c -f
+```
+
+### Code usage
+
+Here we will outline how to parse and compile through Node. For more advanced operations, such as adding functions, check the documentation.
+
+#### Parsing
+
+The `mca-compiler` module exposes a `parse` function, which returns a root `Program` AST node.
+
+Usage:
+```
+mca.parse(code, source);
+```
+
+`code` is the MCA code to parse, `source` is the source file location. If provided, `source` **must be an absolute path.**
+
+Example:
+
+```js
+var mca = require('mca-compiler');
+
+var ast = mca.parse(".log('hi')", "/");
+```
+
+#### Compiling
+
+The module also exposes a `compile` function, which returns an object providing execution information.
+
+Usage:
+```
+mca.compile(code, source);
+```
+
+`code` can either be a root Program AST node, or a string. If it is a string, it will be parsed using `mca.parse`, and the resulting AST will be used. `source` is only required if `code` is a string (otherwise it will be ignored).
+
+`mca.compile` returns an object with the following properties:
+
+```js
+{
+  execution: Array // the results from all root-level statements (i.e those that are direct
+                   //   descendants of the Program node)
+  compiled: Object // the resulting MCIL object
+  context: Context // the execution context object
+}
 ```
 
 ## Roadmap
