@@ -54,6 +54,14 @@ exports.fileNotFoundError = function(message, position) {
     throw ex;
 };
 
+exports.moduleNotFoundError = function(message, position) {
+    var ex = new Error(message);
+    ex._mca = true;
+    ex.name = "ModuleNotFoundError";
+    ex.loc = position;
+    throw ex;
+};
+
 exports.syntaxError = function(message, position) {
     var ex = new Error(message);
     ex._mca = true;
