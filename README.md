@@ -1,8 +1,12 @@
 # MCA Compiler
 
+[Compiler Roadmap](https://github.com/toxic-spanner/mca-compiler/blob/master/ROADMAP.md) - [Language Roadmap](https://github.com/toxic-spanner/mca-language/blob/gh-pages/ROADMAP.md)
+
 MCA is an assembly language that compiles to Minecraft circuitry, specifically Command Blocks. To simplify this, it also introduces a higher-level macro-based language that includes compile-time variables, functions, and operations.
 
 This repository contains the MCA parser and compiler, which compiles to an intermediatery language named MCIL, as well as a set of command-line tools for compiling and debugging.
+
+**This compiler currently implements [MCA v1.1.0](http://toxic-spanner.github.io/mca-language/).**
 
 Documentation on the MCA language is at [toxic-spanner.github.io/mca-language](https://toxic-spanner.github.io/mca-language).
 
@@ -146,10 +150,6 @@ mca.compile(code, source);
   context: Context // the execution context object
 }
 ```
-
-## Roadmap
-
-The language and compiler roadmap is available in [the ROADMAP file](https://github.com/toxic-spanner/mca-compiler/blob/master/ROADMAP.md).
 
 ## License
 
