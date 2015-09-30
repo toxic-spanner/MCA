@@ -1,6 +1,6 @@
 {
   "name": "mca-compiler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compiles MCA code to MCIL",
   "main": "index.js",
   "dependencies": {
