@@ -81,7 +81,8 @@ for (var i = 2; i < process.argv.length; i++) {
 
 function showHelp() {
     console.error("\n  Usage: mca-build [file] <builder> [--help] [-w <width> [--width <width>] [-h <height>]");
-    console.error(  "                   [--height <height>] [-c <input>] [--code <input>] [-o <file>][--output <file>]");
+    console.error(  "                   [--height <height>] [-d <depth>] [--depth <depth>] [-c <input>] [--code <input>]");
+    console.error(  "                   [-o <file>][--output <file>]");
     console.error("\nCompiles an MCA file and passes it to the provided MCIL builder. Use stdin, [file], or --code to");
     console.error(  "provide the MCA code. Outputs the built file to --output or stdout.");
     console.error("\n  Options:");
