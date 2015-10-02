@@ -42,6 +42,7 @@ module.exports = function getAssignable(expression, ctx) {
         setValue: function(newValue) {
             if (isMap) variable.setIndex(variableIndex, newValue);
             else ctx.setVariableIn(variableName, newValue, scope);
+            return newValue;
         }
     };
 };

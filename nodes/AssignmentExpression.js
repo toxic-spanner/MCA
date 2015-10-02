@@ -3,56 +3,12 @@ var getAssignable = require('../getAssignable');
 
 exports.type = "AssignmentExpression";
 exports.call = function(node, ctx, execute) {
-    // find the variable
+    if (node.operator.length === 1) return ctx.operate('=', node.left, node.right);
+
     var assignable = getAssignable(node.left, ctx);
+    var subOperator = node.operator.substr(0, 1);
 
-    var rightValue = execute(node.right);
-    var leftValue = node.operator === '=' ? null : assignable.getValue();
-
-    var newValue;
-    if (node.operator === "+=" && (typeof leftValue === "string" || typeof rightValue === "string")) {
-        newValue = ctx.castString(leftValue) + ctx.castString(rightValue);
-    } else {
-        switch (node.operator) {
-            case '=':
-                newValue = rightValue;
-                break;
-            case '*=':
-                newValue = ctx.castNumber(leftValue) * ctx.castNumber(rightValue);
-                break;
-            case '/=':
-                newValue = ctx.castNumber(leftValue) / ctx.castNumber(rightValue);
-                break;
-            case '%=':
-                newValue = ctx.castNumber(leftValue) % ctx.castNumber(rightValue);
-                break;
-            case '+=':
-                newValue = ctx.castNumber(leftValue) + ctx.castNumber(rightValue);
-                break;
-            case '-=':
-                newValue = ctx.castNumber(leftValue) - ctx.castNumber(rightValue);
-                break;
-            case '>>=':
-                newValue = ctx.castNumber(leftValue) >> ctx.castNumber(rightValue);
-                break;
-            case '>>>=':
-                newValue = ctx.castNumber(leftValue) >>> ctx.castNumber(rightValue);
-                break;
-            case '<<=':
-                newValue = ctx.castNumber(leftValue) << ctx.castNumber(rightValue);
-                break;
-            case '&=':
-                newValue = ctx.castNumber(leftValue) & ctx.castNumber(rightValue);
-                break;
-            case '|=':
-                newValue = ctx.castNumber(leftValue) | ctx.castNumber(rightValue);
-                break;
-            case '^=':
-                newValue = ctx.castNumber(leftValue) ^ ctx.castNumber(rightValue);
-                break;
-        }
-    }
-
-    assignable.setValue(newValue);
-    return newValue;
+    var operated = ctx.operate(subOperator, node.left, node.right);
+    assignable.setValue(operated);
+    return operated;
 };

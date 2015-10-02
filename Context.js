@@ -1,9 +1,11 @@
 var errors = require('./errors');
 var types = require('./types');
 var constants = require('./constants');
+var operators = require('./operators');
+
+var execute = require('./execute');
 
 function Context() {
-    //this.commandStructure = [];
     this.blockBranches = [[]];
     this.currentBranch = 0;
 
@@ -11,6 +13,7 @@ function Context() {
     this.currentExecutionTree = { parent: null, children: this.executionTree };
 
     this.macros = {};
+
     // add constants
     for (var i = 0; i < constants.length; i++) {
         var constantList = constants[i];
@@ -119,6 +122,12 @@ Context.prototype.setVariableIn = function(name, value, scope) {
     var currentValue = scope[name];
     if (currentValue && currentValue.isAssignable) currentValue.setValue(value);
     else scope[name] = value;
+};
+
+Context.prototype.operate = function(type, left, right) {
+    return operators[type].call(left, right, this, function(statements) {
+        return execute(statements, this);
+    }.bind(this));
 };
 
 Context.prototype.strictEqual = function(value1, value2) {
