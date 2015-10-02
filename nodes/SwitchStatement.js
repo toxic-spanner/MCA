@@ -7,18 +7,22 @@ exports.call = function(node, ctx, execute) {
     function nextItem() {
         var caseStmts = node.cases[i];
         if (noBreak || !caseStmts || ctx.strictEqual(checkValue, caseStmts.test)) {
-            var executor = execute.create(caseStmts.consequent);
             noBreak = true;
-            executor.use('BreakStatement', function() {
-                executor.stop();
-                noBreak = false;
+
+            var ex = execute.create(caseStmts.consequent);
+            execute.pushNodeStack({
+                'BreakStatement': function() {
+                    ex.stop();
+                    noBreak = false;
+                }
             });
-            executor.start();
+            ex.start();
+            execute.popNodeStack();
         }
 
         return !noBreak;
     }
     for (var i = 0; i < node.cases.length; i++) {
-        if (nextItem) break;
+        if (nextItem()) break;
     }
 };

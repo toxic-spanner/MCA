@@ -3,7 +3,7 @@ var types = require('./types');
 var constants = require('./constants');
 var operators = require('./operators');
 
-var execute = require('./execute');
+var executor = require('./executor');
 
 function Context() {
     this.blockBranches = [[]];
@@ -126,7 +126,7 @@ Context.prototype.setVariableIn = function(name, value, scope) {
 
 Context.prototype.operate = function(type, left, right) {
     return operators[type].call(left, right, this, function(statements) {
-        return execute(statements, this);
+        executor.execute(statements, this).start();
     }.bind(this));
 };
 

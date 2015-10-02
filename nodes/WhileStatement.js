@@ -2,16 +2,20 @@ exports.type = "WhileStatement";
 exports.call = function(node, ctx, execute) {
     // todo: refactor with 'doWhile' statement
     function nextItem() {
-        var executor = execute.create(node.body), shouldBreak = false;
+        var shouldBreak = false;
 
-        executor.use('ContinueStatement', function() {
-            executor.stop();
+        var ex = execute.create(node.body);
+        execute.pushNodeStack({
+            'ContinueStatement': function() {
+                ex.stop();
+            },
+            'BreakStatement': function() {
+                ex.stop();
+                shouldBreak = true;
+            }
         });
-        executor.use('BreakStatement', function() {
-            executor.stop();
-            shouldBreak = true;
-        });
-        executor.start();
+        ex.start();
+        execute.popNodeStack();
 
         return shouldBreak;
     }
