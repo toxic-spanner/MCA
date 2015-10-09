@@ -1,4 +1,3 @@
-var executor = require('../executor');
 var errors = require('../errors');
 
 function Block(overloads) {
@@ -15,7 +14,7 @@ Block.prototype.getOverload = function(name) {
 
     return {
         execute: function(ctx, params) {
-            var result;
+            var result = null;
 
             ctx.pushScope();
             for (var i = 0; i < params.length; i++) {
@@ -30,16 +29,16 @@ Block.prototype.getOverload = function(name) {
             }
 
             if (overload.block.type === "BlockBodyStatement") {
-                var ex = executor.execute(overload.block, ctx);
-                executor.pushNodeStack({
+                var ex = ctx.executor.execute(overload.block, ctx);
+                ctx.executor.pushNodeStack({
                     'ReturnStatement': function(node) {
-                        if (node.argument) result = executor.execute(node.argument, ctx);
+                        if (node.argument) result = ctx.executor.execute(node.argument, ctx).start();
                         ex.stop();
                     }
                 });
                 ex.start();
-                executor.popNodeStack();
-            } else result = executor.execute(overload.block, ctx).start();
+                ctx.executor.popNodeStack();
+            } else result = ctx.executor.execute(overload.block, ctx).start();
 
             ctx.popScope();
             return result;

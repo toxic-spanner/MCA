@@ -1,5 +1,4 @@
 var grammar = require('./grammar');
-var executor = require('./executor');
 
 var Context = require('./Context');
 
@@ -17,7 +16,7 @@ function compile(code, source) {
 
     var context = new Context();
     return {
-        execution: executor.execute(ast, context).start(),
+        execution: context.executor.execute(ast, context).start(),
         compiled: context.blockBranches,
         context: context
     };

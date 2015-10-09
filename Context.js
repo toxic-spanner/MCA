@@ -3,11 +3,13 @@ var types = require('./types');
 var constants = require('./constants');
 var operators = require('./operators');
 
-var executor = require('./executor');
+var Executor = require('./executor');
 
 function Context() {
     this.blockBranches = [[]];
     this.currentBranch = 0;
+
+    this.executor = new Executor();
 
     this.executionTree = [];
     this.currentExecutionTree = { parent: null, children: this.executionTree };
@@ -126,7 +128,7 @@ Context.prototype.setVariableIn = function(name, value, scope) {
 
 Context.prototype.operate = function(type, left, right) {
     return operators[type].call(left, right, this, function(statements) {
-        executor.execute(statements, this).start();
+        return this.executor.execute(statements, this).start();
     }.bind(this));
 };
 

@@ -1,5 +1,4 @@
 var errors = require('./errors');
-var executor = require('./executor');
 
 module.exports = function getAssignable(expression, ctx) {
     var currentNode = expression;
@@ -15,13 +14,13 @@ module.exports = function getAssignable(expression, ctx) {
             isMap = true;
             variableIndexExpression = currentNode.property;
             currentNode = currentNode.map;
-        } else if (currentNode.type === "MapExpression" && isMap) variable = executor.execute(currentNode.map, ctx).start();
+        } else if (currentNode.type === "MapExpression" && isMap) variable = ctx.executor.execute(currentNode.map, ctx).start();
         else errors.referenceError("Invalid assignable expression");
     }
 
     var variableScopeName, scope;
     if (isMap) {
-        variableIndex = executor.execute(variableIndexExpression, ctx).start();
+        variableIndex = ctx.executor.execute(variableIndexExpression, ctx).start();
         if (variableName) variable = ctx.getVariable(variableName);
         if (!variable || !variable.isMap) errors.typeError("Cannot use index of a non-map");
     } else {

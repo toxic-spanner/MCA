@@ -1,31 +1,40 @@
 function Executor() {
     this.nodeStack = [];
+    this.pushNodeStack(nodes);
 }
 
 Executor.prototype.pushNodeStack = function(overrides) {
-    this.nodeStack.push(overrides);
+    this.nodeStack.unshift(overrides);
 };
 
 Executor.prototype.popNodeStack = function() {
-    this.nodeStack.pop();
+    this.nodeStack.shift();
 };
 
 Executor.prototype.getNode = function(name) {
-    for (var i = this.nodeStack.length - 1; i >= 0; i--) {
+    for (var i = 0; i < this.nodeStack.length; i++) {
         var item = this.nodeStack[i][name];
         if (item) return item;
     }
     return false;
 };
 
+var runningIndexes = [];
+var nextIndex = 0;
+
 Executor.prototype.execute = function(statements, ctx) {
-    var isRunning = true;
+    //var isRunning = true;
+
+    var myIndex = nextIndex++;
+    var children;
 
     function executeStatementList(list) {
-        if (!Array.isArray(list)) return executeItem(list);
+        if (!Array.isArray(list)) {
+            return executeItem(list);
+        }
         var result = [];
         for (var i = 0; i < list.length; i++) {
-            if (!isRunning) break;
+            if (!runningIndexes[myIndex]) break;
             var item = executeStatementList(list[i]);
             if (item != null) result.push(item);
         }
@@ -33,15 +42,19 @@ Executor.prototype.execute = function(statements, ctx) {
     }
 
     var subExecute = function(stmts) {
-        var r = this.execute(stmts, ctx).start();
-        console.log("Result is", r);
-        return r;
+        var obj = this.execute(stmts, ctx);
+        children.push(obj.id);
+        return obj.start();
     }.bind(this);
 
     subExecute.pushNodeStack = this.pushNodeStack.bind(this);
     subExecute.popNodeStack = this.popNodeStack.bind(this);
     subExecute.getNode = this.getNode.bind(this);
-    subExecute.create = this.getNode.bind(this);
+    subExecute.create = function(stmts) {
+        var obj = this.execute(stmts, ctx);
+        children.push(obj.id);
+        return obj;
+    }.bind(this);
 
     var executeItem = function executeItem(item) {
         var node = this.getNode(item.type);
@@ -50,15 +63,15 @@ Executor.prototype.execute = function(statements, ctx) {
             ctx.executionTreeStop();
             return null;
         }
-
-        var obj;
-        ctx.executionTreeStart(obj = {
+        var obj = {
             type: "node",
             node: item
-        });
+        };
+        ctx.executionTreeStart(obj);
 
+        var result;
         try {
-            var result = node.call(item, ctx, subExecute);
+            result = node(item, ctx, subExecute);
         } catch (ex) {
             if (!ex.loc) ex.loc = item.loc;
             throw ex;
@@ -71,19 +84,21 @@ Executor.prototype.execute = function(statements, ctx) {
 
     return {
         start: function() {
-            isRunning = true;
-            var r = executeStatementList(statements);
-            console.log("Result2", r);
-            return r;
+            runningIndexes[myIndex] = true;
+            children = [myIndex];
+
+            return executeStatementList(statements);
         },
         stop: function() {
-            isRunning = false;
-        }
+            for (var i = 0; i < children.length; i++) {
+                runningIndexes[children[i]] = false;
+            }
+        },
+        id: myIndex
     };
 };
 
-// singleton
-module.exports = new Executor();
+module.exports = Executor;
 
 /*
 function execute(statements, ctx, parentNodes) {
@@ -160,6 +175,9 @@ execute.create = function(statements, ctx, parentNodes) {
 
 module.exports = execute;*/
 
-var nodes = require('./nodes');
-
-module.exports.pushNodeStack(nodes);
+var nodeObjects = require('./nodes');
+var nodes = {};
+for (var nodeName in nodeObjects) {
+    if (!nodeObjects.hasOwnProperty(nodeName)) continue;
+    nodes[nodeName] = nodeObjects[nodeName].call;
+}
